@@ -3,27 +3,26 @@ Transform: AWS::Serverless-2016-10-31
 Description: Trivia Game
 
 Resources:
-
   TriviaWebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
       Name: TriviaWebSocket
       ProtocolType: WEBSOCKET
-      RouteSelectionExpression: "$request.body.action"
+      RouteSelectionExpression: '$request.body.action'
 
   TriviaConnections:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-      - AttributeName: "connectionId"
-        AttributeType: "S"
-      - AttributeName: "gameId"
-        AttributeType: "S"
+        - AttributeName: 'connectionId'
+          AttributeType: 'S'
+        - AttributeName: 'gameId'
+          AttributeType: 'S'
       KeySchema:
-      - AttributeName: "gameId"
-        KeyType: "HASH"
-      - AttributeName: "connectionId"
-        KeyType: "RANGE"
+        - AttributeName: 'gameId'
+          KeyType: 'HASH'
+        - AttributeName: 'connectionId'
+          KeyType: 'RANGE'
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
@@ -46,27 +45,26 @@ Resources:
       Description: NewGame Integration
       IntegrationType: AWS_PROXY
       IntegrationUri:
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NewGameFunction.Arn}/invocations
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${NewGameFunction.Arn}/invocations
   NewGameFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: back-end-python/gameactions/
+      CodeUri: server/gameactions/
       Handler: app.trivia_newgame
       Runtime: python3.9
       Environment:
         Variables:
           TABLE_NAME: !Ref TriviaConnections
-          APIGW_ENDPOINT:  !Sub "https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+          APIGW_ENDPOINT: !Sub 'https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod'
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TriviaConnections
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TriviaConnections
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
   NewGamePermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -94,27 +92,26 @@ Resources:
       Description: JoinGame Integration
       IntegrationType: AWS_PROXY
       IntegrationUri:
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JoinGameFunction.Arn}/invocations
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${JoinGameFunction.Arn}/invocations
   JoinGameFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: back-end-python/gameactions/
+      CodeUri: server/gameactions/
       Handler: app.trivia_joingame
       Runtime: python3.9
       Environment:
         Variables:
           TABLE_NAME: !Ref TriviaConnections
-          APIGW_ENDPOINT:  !Sub "https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+          APIGW_ENDPOINT: !Sub 'https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod'
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TriviaConnections
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TriviaConnections
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
   JoinGamePermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -142,34 +139,33 @@ Resources:
       Description: StartGame Integration
       IntegrationType: AWS_PROXY
       IntegrationUri:
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StartGameFunction.Arn}/invocations
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${StartGameFunction.Arn}/invocations
   StartGameFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: back-end-python/gameactions/
+      CodeUri: server/gameactions/
       Handler: app.trivia_startgame
       Runtime: python3.9
       Environment:
         Variables:
           TABLE_NAME: !Ref TriviaConnections
-          APIGW_ENDPOINT:  !Sub "https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+          APIGW_ENDPOINT: !Sub 'https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod'
           STATE_MACHINE: !Ref TriviaStateMachine
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TriviaConnections
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'states:StartExecution'
-          Resource:
-          - '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TriviaConnections
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'states:StartExecution'
+              Resource:
+                - '*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
   StartGamePermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -197,33 +193,32 @@ Resources:
       Description: Answer Integration
       IntegrationType: AWS_PROXY
       IntegrationUri:
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AnswerFunction.Arn}/invocations
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AnswerFunction.Arn}/invocations
   AnswerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: back-end-python/gameactions/
+      CodeUri: server/gameactions/
       Handler: app.trivia_answer
       Runtime: python3.9
       Environment:
         Variables:
           TABLE_NAME: !Ref TriviaConnections
-          APIGW_ENDPOINT:  !Sub "https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+          APIGW_ENDPOINT: !Sub 'https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod'
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TriviaConnections
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'states:StartExecution'
-          Resource:
-          - '*'
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TriviaConnections
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'states:StartExecution'
+              Resource:
+                - '*'
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
   AnswerPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -236,52 +231,52 @@ Resources:
   QuestionFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: back-end-python/gameactions/
+      CodeUri: server/gameactions/
       Handler: app.trivia_question
       Runtime: python3.9
       Environment:
         Variables:
           TABLE_NAME: !Ref TriviaConnections
-          APIGW_ENDPOINT:  !Sub "https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+          APIGW_ENDPOINT: !Sub 'https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod'
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TriviaConnections
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TriviaConnections
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
 
   CalculateScoresFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: back-end-python/gameactions/
+      CodeUri: server/gameactions/
       Handler: app.trivia_calculate_scores
       Runtime: python3.9
       Environment:
         Variables:
           TABLE_NAME: !Ref TriviaConnections
-          APIGW_ENDPOINT:  !Sub "https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod"
+          APIGW_ENDPOINT: !Sub 'https://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/Prod'
       Policies:
-      - DynamoDBCrudPolicy:
-          TableName: !Ref TriviaConnections
-      - Statement:
-        - Effect: Allow
-          Action:
-          - 'execute-api:ManageConnections'
-          Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TriviaConnections
+        - Statement:
+            - Effect: Allow
+              Action:
+                - 'execute-api:ManageConnections'
+              Resource:
+                - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${TriviaWebSocket}/*'
 
   Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
-     - NewGameRoute
-     - JoinGameRoute
-     - NewGameRoute
-     - JoinGameRoute
-     - StartGameRoute
-     - AnswerRoute
+      - NewGameRoute
+      - JoinGameRoute
+      - NewGameRoute
+      - JoinGameRoute
+      - StartGameRoute
+      - AnswerRoute
 
     Properties:
       ApiId: !Ref TriviaWebSocket
@@ -318,19 +313,18 @@ Resources:
             Type: Task
             Resource: !GetAtt CalculateScoresFunction.Arn
             Next: IsGameOver
-            ResultPath: "$.iterator"
+            ResultPath: '$.iterator'
           IsGameOver:
             Type: Choice
             Choices:
-            - Variable: "$.iterator.IsGameOver"
-              BooleanEquals: true
-              Next: GameOver
+              - Variable: '$.iterator.IsGameOver'
+                BooleanEquals: true
+                Next: GameOver
             Default: Question
           GameOver:
             Type: Succeed
 
-
 Outputs:
   TriviaWebSocketApi:
-    Description: "API Gateway websockets endpoint"
-    Value: !Sub "wss://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+    Description: 'API Gateway websockets endpoint'
+    Value: !Sub 'wss://${TriviaWebSocket}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
